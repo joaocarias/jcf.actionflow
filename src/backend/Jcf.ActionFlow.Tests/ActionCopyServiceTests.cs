@@ -1,4 +1,5 @@
 using Jcf.ActionFlow.Core.Copying;
+using Jcf.ActionFlow.Core.Exceptions;
 using Jcf.ActionFlow.Core.Models;
 using Jcf.ActionFlow.Tests.Fixtures;
 
@@ -81,5 +82,51 @@ public class ActionCopyServiceTests
 
         Assert.Equal("action_25692", result.Action.NextAction);
         Assert.Contains(result.Warnings, w => w.Contains("action_25692"));
+    }
+
+    [Fact]
+    public void Copy_with_replaceActionId_overwrites_the_existing_clone_keeping_its_id()
+    {
+        var workspace = FreshWorkspace();
+
+        // action_49668-2 ("prod/triagem/finaliza") is already a clone of action_49668 in prod.
+        var result = _service.Execute(
+            workspace,
+            "action_49668",
+            new CopyActionRequest("prod", CopyModes.Copy, null, ReferenceStrategies.Keep, ReplaceActionId: "action_49668-2"));
+
+        Assert.Equal("action_49668-2", result.Action.Action);
+        Assert.Contains(result.Warnings, w => w.Contains("substituída"));
+
+        // replaced in place, not duplicated.
+        Assert.Single(workspace.Actions, a => a.Action == "action_49668-2");
+        Assert.Contains(workspace.Collections.Single(c => c.Title == "prod").ActionReferences, r => r.Action == "action_49668-2");
+
+        // old intent freed up and re-cloned under the same suffix.
+        Assert.Equal("action_49668_intent_40724-2", result.Action.Condition?.Intent);
+        Assert.Single(workspace.Intents, i => i.Name == "action_49668_intent_40724-2");
+    }
+
+    [Fact]
+    public void Copy_with_replaceActionId_rejects_a_target_with_a_different_root_id()
+    {
+        var workspace = FreshWorkspace();
+
+        Assert.Throws<InvalidWorkspaceException>(() => _service.Execute(
+            workspace,
+            "action_49668",
+            new CopyActionRequest("prod", CopyModes.Copy, null, ReferenceStrategies.Keep, ReplaceActionId: "action_8087")));
+    }
+
+    [Fact]
+    public void Copy_with_replaceActionId_rejects_a_target_outside_the_destination_collection()
+    {
+        var workspace = FreshWorkspace();
+
+        // action_49668-2 lives in "prod", not "hml".
+        Assert.Throws<InvalidWorkspaceException>(() => _service.Execute(
+            workspace,
+            "action_49668",
+            new CopyActionRequest("hml", CopyModes.Copy, null, ReferenceStrategies.Keep, ReplaceActionId: "action_49668-2")));
     }
 }

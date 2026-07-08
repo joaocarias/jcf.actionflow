@@ -15,10 +15,16 @@ public static class ReferenceStrategies
 }
 
 /// <param name="TargetCollection">Either the collection id (e.g. "collection_4598") or its title (e.g. "prod").</param>
+/// <param name="ReplaceActionId">
+/// When set (mode=copy only), overwrite this existing action instead of minting a new
+/// suffixed id. Must already be in <paramref name="TargetCollection"/> and share the same
+/// root id as the action being copied (e.g. "action_49668" and "action_49668-2").
+/// </param>
 public sealed record CopyActionRequest(
     string TargetCollection,
     string Mode,
     string? TitlePrefix,
-    string ReferenceStrategy);
+    string ReferenceStrategy,
+    string? ReplaceActionId = null);
 
 public sealed record CopyActionResult(ActionDefinition Action, IReadOnlyList<string> Warnings);

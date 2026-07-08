@@ -11,7 +11,7 @@ import type {
   WatsonAction,
   WatsonStep,
 } from '../lib/types'
-import { SYSTEM_ACTION_IDS, extractOutputText, formatCondition, isFreeTextQuestion } from '../lib/watson'
+import { SYSTEM_ACTION_IDS, extractOutputText, formatCondition, isFreeTextQuestion, rootActionId } from '../lib/watson'
 
 type LoadState =
   | { status: 'loading' }
@@ -258,6 +258,8 @@ function CopyMoveForm({
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [result, setResult] = useState<CopyActionResponse | null>(null)
+  const [replacedId, setReplacedId] = useState<string | null>(null)
+  const [conflict, setConflict] = useState<{ actionId: string; title: string | null } | null>(null)
 
   async function submit() {
     if (!targetCollection) {
@@ -265,6 +267,23 @@ function CopyMoveForm({
       return
     }
 
+    if (mode === 'copy') {
+      const target = collections.find((c) => c.collectionId === targetCollection)
+      const sourceRoot = rootActionId(action.action)
+      const existing = target?.actions.find(
+        (a) => a.actionId !== action.action && rootActionId(a.actionId) === sourceRoot,
+      )
+      if (existing) {
+        setConflict(existing)
+        return
+      }
+    }
+
+    await runCopyOrMove(null)
+  }
+
+  async function runCopyOrMove(replaceActionId: string | null) {
+    setConflict(null)
     setSubmitting(true)
     setError(null)
     setResult(null)
@@ -274,8 +293,10 @@ function CopyMoveForm({
         mode,
         titlePrefix: mode === 'copy' && titlePrefix.trim().length > 0 ? titlePrefix : null,
         referenceStrategy,
+        replaceActionId,
       })
       setResult(response)
+      setReplacedId(replaceActionId)
       onIssues(response.issues)
     } catch (err) {
       setError(err instanceof ApiError ? err.message : 'Falha ao copiar/mover a action.')
@@ -288,6 +309,42 @@ function CopyMoveForm({
 
   return (
     <div className="rounded-lg border border-slate-200 bg-white p-4">
+      {conflict && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-slate-900/40 px-4">
+          <div className="w-full max-w-sm rounded-lg bg-white p-5 shadow-xl">
+            <h3 className="text-sm font-semibold text-slate-900">Já existe uma cópia nesta collection</h3>
+            <p className="mt-2 text-sm text-slate-600">
+              <span className="font-mono">{conflict.actionId}</span>
+              {conflict.title ? ` (${conflict.title})` : ''} parece ser uma cópia desta mesma action. Deseja
+              substituí-la pelo conteúdo atual ou criar uma nova cópia?
+            </p>
+            <div className="mt-4 flex justify-end gap-2">
+              <button
+                type="button"
+                onClick={() => setConflict(null)}
+                className="rounded-md px-3 py-1.5 text-sm font-medium text-slate-600 hover:bg-slate-100"
+              >
+                Cancelar
+              </button>
+              <button
+                type="button"
+                onClick={() => void runCopyOrMove(null)}
+                className="rounded-md border border-slate-300 px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50"
+              >
+                Nova cópia
+              </button>
+              <button
+                type="button"
+                onClick={() => void runCopyOrMove(conflict.actionId)}
+                className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500"
+              >
+                Substituir
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <h2 className="text-sm font-semibold text-slate-800">Copiar ou mover</h2>
       <div className="mt-3 flex flex-wrap items-end gap-3">
         <label className="flex flex-col gap-1 text-xs text-slate-600">
@@ -360,13 +417,14 @@ function CopyMoveForm({
           <p className="text-xs text-emerald-700">
             {mode === 'copy' ? (
               <>
-                Action copiada como <span className="font-mono">{result.action.action}</span>.{' '}
+                {replacedId ? 'Action substituída: ' : 'Action copiada como '}
+                <span className="font-mono">{result.action.action}</span>.{' '}
                 <button
                   type="button"
                   onClick={() => navigate(`/workspaces/${sessionId}/actions/${result.action.action}`)}
                   className="font-medium text-indigo-600 hover:text-indigo-700"
                 >
-                  Ver action copiada
+                  {replacedId ? 'Ver action' : 'Ver action copiada'}
                 </button>
               </>
             ) : (

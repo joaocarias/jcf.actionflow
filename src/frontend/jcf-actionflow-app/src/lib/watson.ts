@@ -1,6 +1,11 @@
 /** Watson Actions reserves these ids for lifecycle hooks; mirrors Core.Domain.SystemActions. */
 export const SYSTEM_ACTION_IDS = new Set(['welcome', 'fallback', 'anything_else', 'run_always'])
 
+/** "action_49668-2" -> "action_49668". Mirrors ActionCopyService.RootActionId. */
+export function rootActionId(actionId: string): string {
+  return actionId.replace(/-\d+$/, '')
+}
+
 function isPlainObject(value: unknown): value is Record<string, unknown> {
   return value !== null && typeof value === 'object' && !Array.isArray(value)
 }

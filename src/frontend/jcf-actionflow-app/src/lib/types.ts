@@ -76,6 +76,7 @@ export interface CopyActionRequest {
   mode: CopyMode
   titlePrefix?: string | null
   referenceStrategy: ReferenceStrategy
+  replaceActionId?: string | null
 }
 
 /**

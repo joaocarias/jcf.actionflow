@@ -59,10 +59,11 @@ public sealed class ActionCopyService
     }
 
     /// <summary>
-    /// Copy: clone the action under a fresh suffixed id, clone its intent the same way,
-    /// register the clone in the target collection, then resolve every outbound reference
-    /// (next_action + each step's invoke_another_action) per <paramref name="request"/>'s
-    /// ReferenceStrategy, and finally apply the title prefix swap.
+    /// Copy: clone the action under a fresh suffixed id (or overwrite an existing same-root
+    /// clone when <see cref="CopyActionRequest.ReplaceActionId"/> is set), clone its intent
+    /// the same way, register the clone in the target collection, then resolve every outbound
+    /// reference (next_action + each step's invoke_another_action) per
+    /// <paramref name="request"/>'s ReferenceStrategy, and finally apply the title prefix swap.
     /// </summary>
     private static CopyActionResult Copy(
         WorkspaceData workspace,
@@ -76,17 +77,41 @@ public sealed class ActionCopyService
                 $"referenceStrategy inválido: '{request.ReferenceStrategy}' (use 'keep' ou 'remap').");
         }
 
-        var existingActionIds = workspace.Actions.Select(a => a.Action).ToHashSet(StringComparer.Ordinal);
-        var newActionId = NextSuffixedId(source.Action, existingActionIds);
+        var warnings = new List<string>();
+        var replaced = ResolveReplaceTarget(workspace, source, target, request.ReplaceActionId);
+
+        string newActionId;
+        if (replaced is not null)
+        {
+            newActionId = replaced.Action;
+        }
+        else
+        {
+            var existingActionIds = workspace.Actions.Select(a => a.Action).ToHashSet(StringComparer.Ordinal);
+            newActionId = NextSuffixedId(source.Action, existingActionIds);
+        }
 
         var clone = WorkspaceJsonSerializer.DeepClone(source);
         clone.Action = newActionId;
 
+        if (replaced is not null)
+        {
+            workspace.Actions.Remove(replaced);
+            if (replaced.Condition?.Intent is { } oldIntentName)
+            {
+                workspace.Intents.RemoveAll(i => i.Name == oldIntentName);
+            }
+
+            warnings.Add($"Action '{newActionId}' substituída pelo conteúdo atual de '{source.Action}'.");
+        }
+
         CloneIntent(workspace, clone);
 
-        target.ActionReferences.Add(new ActionReference { Action = newActionId });
+        if (target.ActionReferences.All(r => r.Action != newActionId))
+        {
+            target.ActionReferences.Add(new ActionReference { Action = newActionId });
+        }
 
-        var warnings = new List<string>();
         var actionsById = WorkspaceLookups.ActionsById(workspace);
         var collectionByAction = WorkspaceLookups.CollectionIdByAction(workspace);
 
@@ -107,6 +132,43 @@ public sealed class ActionCopyService
 
         return new CopyActionResult(clone, warnings);
     }
+
+    /// <summary>
+    /// Validates and resolves the action a "copy" should overwrite in place, or returns null
+    /// when the request isn't asking for a replace.
+    /// </summary>
+    private static ActionDefinition? ResolveReplaceTarget(
+        WorkspaceData workspace,
+        ActionDefinition source,
+        Collection target,
+        string? replaceActionId)
+    {
+        if (replaceActionId is null) return null;
+
+        if (SystemActions.IsSystemAction(replaceActionId))
+        {
+            throw new SystemActionProtectedException(replaceActionId);
+        }
+
+        var replaced = WorkspaceLookups.FindAction(workspace, replaceActionId);
+
+        if (target.ActionReferences.All(r => r.Action != replaceActionId))
+        {
+            throw new InvalidWorkspaceException(
+                $"'{replaceActionId}' não está na collection destino '{target.CollectionId}'.");
+        }
+
+        if (RootActionId(replaced.Action) != RootActionId(source.Action))
+        {
+            throw new InvalidWorkspaceException(
+                $"'{replaceActionId}' não é uma cópia de '{source.Action}' (raízes de id diferentes).");
+        }
+
+        return replaced;
+    }
+
+    /// <summary>"action_49668-2" -> "action_49668". Two ids share a root when one is a clone of the other.</summary>
+    public static string RootActionId(string actionId) => SuffixPattern.Replace(actionId, "");
 
     private static void CloneIntent(WorkspaceData workspace, ActionDefinition clone)
     {
@@ -221,7 +283,7 @@ public sealed class ActionCopyService
     /// </summary>
     private static string NextSuffixedId(string baseId, ISet<string> existingIds)
     {
-        var root = SuffixPattern.Replace(baseId, "");
+        var root = RootActionId(baseId);
         for (var n = 2; ; n++)
         {
             var candidate = $"{root}-{n}";
