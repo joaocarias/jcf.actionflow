@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { IssueList } from '../components/IssueList'
-import { ApiError, getActions, getCollections, getWorkspaceSummary, validateWorkspace } from '../lib/api'
+import { ApiError, exportWorkspace, getActions, getCollections, getWorkspaceSummary, validateWorkspace } from '../lib/api'
+import { downloadTextFile } from '../lib/download'
 import type { ActionSummary, CollectionSummary, ValidationIssue, WorkspaceSummary } from '../lib/types'
 
 type LoadState =
@@ -19,6 +20,8 @@ type LoadState =
 export function Workspace() {
   const { sessionId } = useParams<{ sessionId: string }>()
   const [state, setState] = useState<LoadState>({ status: 'loading' })
+  const [downloadError, setDownloadError] = useState<string | null>(null)
+  const [downloading, setDownloading] = useState(false)
 
   useEffect(() => {
     if (!sessionId) return
@@ -78,6 +81,21 @@ export function Workspace() {
 
   const { summary, collections, systemActions, orphanActions, issues } = state
 
+  const handleDownload = async () => {
+    if (!sessionId) return
+    setDownloadError(null)
+    setDownloading(true)
+    try {
+      const json = await exportWorkspace(sessionId)
+      const safeName = (summary.name ?? sessionId).replace(/[^a-zA-Z0-9_-]+/g, '_')
+      downloadTextFile(`${safeName}.json`, json)
+    } catch (error) {
+      setDownloadError(error instanceof ApiError ? error.message : 'Falha ao gerar o JSON para download.')
+    } finally {
+      setDownloading(false)
+    }
+  }
+
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
       <div className="flex items-start justify-between gap-4">
@@ -88,13 +106,27 @@ export function Workspace() {
             {summary.intentCount} intents · {summary.variableCount} variáveis · {summary.collectionCount} collections
           </p>
         </div>
-        <Link
-          to={`/workspaces/${sessionId}/graph`}
-          className="shrink-0 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500"
-        >
-          Ver grafo
-        </Link>
+        <div className="flex shrink-0 items-center gap-2">
+          <button
+            type="button"
+            onClick={handleDownload}
+            disabled={downloading}
+            className="rounded-md border border-slate-300 bg-white px-3 py-1.5 text-sm font-medium text-slate-700 hover:bg-slate-50 disabled:opacity-60"
+          >
+            {downloading ? 'Gerando...' : 'Baixar JSON'}
+          </button>
+          <Link
+            to={`/workspaces/${sessionId}/graph`}
+            className="rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500"
+          >
+            Ver grafo
+          </Link>
+        </div>
       </div>
+
+      {downloadError && (
+        <p className="mt-3 rounded-md border border-red-200 bg-red-50 px-3 py-2 text-sm text-red-800">{downloadError}</p>
+      )}
 
       <div className="mt-6">
         <IssueList issues={issues} />
