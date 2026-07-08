@@ -30,7 +30,7 @@ public class SystemActionProtectionTests
     public void System_actions_cannot_be_deleted(string systemActionId)
     {
         var repository = new InMemoryWorkspaceRepository();
-        var service = new WorkspaceService(repository);
+        var service = new WorkspaceService(repository, new ActionCopyService());
         var session = repository.Add(SampleWorkspaceFixture.Load());
 
         Assert.Throws<SystemActionProtectedException>(() => service.DeleteAction(session.Id, systemActionId, force: true));
@@ -44,7 +44,7 @@ public class SystemActionProtectionTests
     public void System_actions_cannot_be_renamed(string systemActionId)
     {
         var repository = new InMemoryWorkspaceRepository();
-        var service = new WorkspaceService(repository);
+        var service = new WorkspaceService(repository, new ActionCopyService());
         var session = repository.Add(SampleWorkspaceFixture.Load());
 
         Assert.Throws<SystemActionProtectedException>(() => service.RenameAction(session.Id, systemActionId, "Nova label"));

@@ -1,3 +1,4 @@
+using Jcf.ActionFlow.Core.Copying;
 using Jcf.ActionFlow.Core.Domain;
 using Jcf.ActionFlow.Core.Exceptions;
 using Jcf.ActionFlow.Core.Models;
@@ -8,9 +9,10 @@ namespace Jcf.ActionFlow.Core.Services;
 
 /// <summary>
 /// Orchestrates import/export and the basic read/edit operations over a workspace session.
-/// Graph construction, copy/move, and validation live in their own services.
+/// Graph construction and validation live in their own services; copy/move's algorithm lives
+/// in <see cref="ActionCopyService"/> but is persisted here, same as every other edit.
 /// </summary>
-public sealed class WorkspaceService(IWorkspaceRepository repository)
+public sealed class WorkspaceService(IWorkspaceRepository repository, ActionCopyService copyService)
 {
     public WorkspaceSession Import(string json)
     {
@@ -94,6 +96,14 @@ public sealed class WorkspaceService(IWorkspaceRepository repository)
 
     public ActionDefinition GetActionDetail(string id, string actionId) =>
         WorkspaceLookups.FindAction(GetSession(id).Export.Workspace, actionId);
+
+    public CopyActionResult CopyOrMoveAction(string id, string actionId, CopyActionRequest request)
+    {
+        var session = GetSession(id);
+        var result = copyService.Execute(session.Export.Workspace, actionId, request);
+        repository.Update(session);
+        return result;
+    }
 
     public ActionDefinition RenameAction(string id, string actionId, string newTitle)
     {

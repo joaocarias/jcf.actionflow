@@ -10,11 +10,10 @@ public static class ActionEndpoints
     {
         var group = app.MapGroup("/api/workspaces/{id}/actions/{actionId}").WithTags("Actions");
 
-        group.MapPost("/copy", (string id, string actionId, CopyActionRequest request, WorkspaceService service, ActionCopyService copyService) =>
+        group.MapPost("/copy", (string id, string actionId, CopyActionRequest request, WorkspaceService service) =>
             {
-                var session = service.GetSession(id);
-                var result = copyService.Execute(session.Export.Workspace, actionId, request);
-                var issues = WorkspaceValidator.Validate(session.Export.Workspace);
+                var result = service.CopyOrMoveAction(id, actionId, request);
+                var issues = WorkspaceValidator.Validate(service.GetSession(id).Export.Workspace);
                 return Results.Ok(new CopyActionResponse(result.Action, result.Warnings, issues));
             })
             .WithName("CopyOrMoveAction")
