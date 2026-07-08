@@ -80,11 +80,21 @@ export function Workspace() {
 
   return (
     <div className="mx-auto max-w-4xl px-6 py-16">
-      <h1 className="text-2xl font-semibold text-slate-900">{summary.name ?? 'Fluxo importado'}</h1>
-      <p className="mt-1 text-sm text-slate-500">
-        {summary.businessActionCount} actions de negócio · {summary.systemActionCount} de sistema ·{' '}
-        {summary.intentCount} intents · {summary.variableCount} variáveis · {summary.collectionCount} collections
-      </p>
+      <div className="flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-semibold text-slate-900">{summary.name ?? 'Fluxo importado'}</h1>
+          <p className="mt-1 text-sm text-slate-500">
+            {summary.businessActionCount} actions de negócio · {summary.systemActionCount} de sistema ·{' '}
+            {summary.intentCount} intents · {summary.variableCount} variáveis · {summary.collectionCount} collections
+          </p>
+        </div>
+        <Link
+          to={`/workspaces/${sessionId}/graph`}
+          className="shrink-0 rounded-md bg-indigo-600 px-3 py-1.5 text-sm font-medium text-white hover:bg-indigo-500"
+        >
+          Ver grafo
+        </Link>
+      </div>
 
       <div className="mt-6">
         <IssueList issues={issues} />

@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route } from 'react-router-dom'
 import { Navbar } from './components/Navbar'
 import { ActionDetail } from './pages/ActionDetail'
+import { GraphView } from './pages/Graph'
 import { NovoFluxo } from './pages/NovoFluxo'
 import { Sobre } from './pages/Sobre'
 import { Workspace } from './pages/Workspace'
@@ -14,6 +15,7 @@ function App() {
           <Routes>
             <Route path="/" element={<NovoFluxo />} />
             <Route path="/workspaces/:sessionId" element={<Workspace />} />
+            <Route path="/workspaces/:sessionId/graph" element={<GraphView />} />
             <Route path="/workspaces/:sessionId/actions/:actionId" element={<ActionDetail />} />
             <Route path="/sobre" element={<Sobre />} />
           </Routes>
