@@ -1,0 +1,5 @@
+<Solution>
+  <Project Path="Jcf.ActionFlow.Core/Jcf.ActionFlow.Core.csproj" />
+  <Project Path="Jcf.ActionFlow.Api/Jcf.ActionFlow.Api.csproj" />
+  <Project Path="Jcf.ActionFlow.Tests/Jcf.ActionFlow.Tests.csproj" />
+</Solution>

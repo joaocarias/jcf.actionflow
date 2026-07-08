@@ -1,0 +1,1454 @@
+{
+  "name": "Lab-Chat-action",
+  "type": "action",
+  "valid": true,
+  "status": "Available",
+  "created": "2026-06-26T15:19:28.447Z",
+  "updated": "2026-07-07T15:27:37.023Z",
+  "language": "pt-br",
+  "skill_id": "a849d007-f32e-4377-95d1-6743a224e483",
+  "workspace": {
+    "actions": [
+      {
+        "type": "standard",
+        "steps": [
+          {
+            "step": "step_174",
+            "type": "standard",
+            "title": "ASK NUMERO CARTAO",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text_expression": {
+                        "concat": [
+                          {
+                            "scalar": "..\n\nFale os dezesseis números do cartão que deseja ativar."
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "question": {
+              "free_text": true
+            },
+            "resolver": {
+              "type": "continue"
+            },
+            "variable": "step_174",
+            "next_step": "step_801"
+          },
+          {
+            "step": "step_801",
+            "type": "standard",
+            "title": "VALIDA (16 digitos)",
+            "context": {
+              "variables": [
+                {
+                  "value": {
+                    "expression": "${step_174}.toString().replaceAll(\"[^0-9]\", \"\").length() == 16"
+                  },
+                  "skill_variable": "EntradaValida"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "continue"
+            },
+            "variable": "step_801",
+            "next_step": "step_774"
+          },
+          {
+            "step": "step_774",
+            "type": "standard",
+            "title": "VALIDA (so digitos/espacos)",
+            "context": {
+              "variables": [
+                {
+                  "value": {
+                    "skill_variable": "FALSE"
+                  },
+                  "skill_variable": "EntradaValida"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "continue"
+            },
+            "variable": "step_774",
+            "condition": {
+              "expression": "${step_174}.toString().matches(\"[0-9]*\") == false"
+            },
+            "next_step": "step_848"
+          },
+          {
+            "step": "step_848",
+            "type": "standard",
+            "title": "INVALIDO -> registra-tentativa",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text_expression": {
+                        "concat": [
+                          {
+                            "scalar": "O número do cartão informado é inválido."
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "invoke_another_action",
+              "invoke_action": {
+                "action": "action_8197",
+                "policy": "default",
+                "parameters": null,
+                "result_variable": "step_848_result_1",
+                "ignore_end_action_steps": false
+              }
+            },
+            "variable": "step_848",
+            "condition": {
+              "neq": [
+                {
+                  "skill_variable": "EntradaValida"
+                },
+                {
+                  "scalar": true
+                }
+              ]
+            }
+          }
+        ],
+        "title": "hml/triagem/seleciona-cartão",
+        "action": "action_25692",
+        "boosts": [],
+        "handlers": [],
+        "condition": {
+          "intent": "action_25692_intent_38997"
+        },
+        "variables": [
+          {
+            "title": ".. Fale os dezesseis números do cartão que deseja ativar.",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_174",
+            "data_type": "any"
+          },
+          {
+            "title": "No response",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_774",
+            "data_type": "any"
+          },
+          {
+            "title": "No response",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_801",
+            "data_type": "any"
+          },
+          {
+            "title": "INVALIDO -> registra-tentativa",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_848",
+            "data_type": "any"
+          },
+          {
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_848_result_1",
+            "data_type": "any"
+          }
+        ],
+        "launch_mode": "learning",
+        "next_action": "action_8087",
+        "topic_switch": {
+          "allowed_from": true,
+          "allowed_into": true,
+          "never_return": false
+        },
+        "disambiguation_opt_out": false
+      },
+      {
+        "type": "standard",
+        "steps": [
+          {
+            "step": "step_798",
+            "type": "standard",
+            "handlers": [],
+            "resolver": {
+              "type": "connect_to_agent",
+              "response": {
+                "transfer_info": {
+                  "target": {
+                    "nice_cxone": {
+                      "custom_data": {
+                        "p2": "4004_Desliga"
+                      }
+                    }
+                  }
+                },
+                "agent_available": {
+                  "message": " "
+                },
+                "agent_unavailable": {
+                  "message": " "
+                },
+                "message_to_human_agent": ""
+              }
+            },
+            "variable": "step_798"
+          }
+        ],
+        "title": "hml/triagem/finaliza",
+        "action": "action_49668",
+        "boosts": [],
+        "handlers": [],
+        "condition": {
+          "intent": "action_49668_intent_40724"
+        },
+        "variables": [
+          {
+            "title": "No response",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_798",
+            "data_type": "any"
+          }
+        ],
+        "launch_mode": "learning",
+        "next_action": "action_8197",
+        "topic_switch": {
+          "allowed_from": true,
+          "allowed_into": true,
+          "never_return": false
+        },
+        "disambiguation_opt_out": false
+      },
+      {
+        "type": "standard",
+        "steps": [
+          {
+            "step": "step_798",
+            "type": "standard",
+            "handlers": [],
+            "resolver": {
+              "type": "connect_to_agent",
+              "response": {
+                "transfer_info": {
+                  "target": {
+                    "nice_cxone": {
+                      "custom_data": {
+                        "p2": "4004_Desliga"
+                      }
+                    }
+                  }
+                },
+                "agent_available": {
+                  "message": " "
+                },
+                "agent_unavailable": {
+                  "message": " "
+                },
+                "message_to_human_agent": ""
+              }
+            },
+            "variable": "step_798"
+          }
+        ],
+        "title": "prod/triagem/finaliza",
+        "action": "action_49668-2",
+        "boosts": [],
+        "handlers": [],
+        "condition": {
+          "intent": "action_49668_intent_40724-2"
+        },
+        "variables": [
+          {
+            "title": "No response",
+            "variable": "step_798",
+            "data_type": "any"
+          }
+        ],
+        "launch_mode": "learning",
+        "next_action": "fallback",
+        "display_name": "",
+        "topic_switch": {
+          "allowed_from": true,
+          "allowed_into": true,
+          "never_return": false
+        },
+        "disambiguation_opt_out": false
+      },
+      {
+        "type": "standard",
+        "steps": [
+          {
+            "step": "step_384",
+            "type": "standard",
+            "title": "GOTO (hml/triagem/seleciona-cartão)",
+            "handlers": [],
+            "resolver": {
+              "type": "invoke_another_action",
+              "invoke_action": {
+                "action": "action_25692",
+                "policy": "default",
+                "parameters": null,
+                "result_variable": "step_384_result_1",
+                "ignore_end_action_steps": false
+              }
+            },
+            "variable": "step_384"
+          }
+        ],
+        "title": "hml/triagem",
+        "action": "action_8087",
+        "boosts": [],
+        "handlers": [],
+        "condition": {
+          "intent": "action_8087_intent_41549"
+        },
+        "variables": [
+          {
+            "title": "GOTO (hml/triagem/seleciona-cartão)",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_384",
+            "data_type": "any"
+          },
+          {
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_384_result_1",
+            "data_type": "any"
+          }
+        ],
+        "launch_mode": "learning",
+        "next_action": "action_49668-2",
+        "display_name": "",
+        "topic_switch": {
+          "allowed_from": true,
+          "allowed_into": true,
+          "never_return": false
+        },
+        "disambiguation_opt_out": false
+      },
+      {
+        "type": "standard",
+        "steps": [
+          {
+            "step": "step_222",
+            "type": "standard",
+            "title": "INCREMENTA TENTATIVA",
+            "context": {
+              "variables": [
+                {
+                  "value": {
+                    "expression": "(${TentativasCartao} ?? 0) + 1"
+                  },
+                  "skill_variable": "TentativasCartao"
+                },
+                {
+                  "value": {
+                    "expression": "null"
+                  },
+                  "skill_variable": "SelectedCard"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "continue"
+            },
+            "variable": "step_222",
+            "next_step": "step_440"
+          },
+          {
+            "step": "step_440",
+            "type": "standard",
+            "title": "LIMITE DE TENTATIVAS -> finaliza",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text_expression": {
+                        "concat": [
+                          {
+                            "scalar": "Você atingiu o limite de tentativas. Vamos encerrar por aqui."
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "invoke_another_action",
+              "invoke_action": {
+                "action": "action_49668",
+                "policy": "default",
+                "parameters": null,
+                "result_variable": "step_440_result_1",
+                "ignore_end_action_steps": false
+              }
+            },
+            "variable": "step_440",
+            "condition": {
+              "gte": [
+                {
+                  "skill_variable": "TentativasCartao"
+                },
+                {
+                  "scalar": "3"
+                }
+              ]
+            },
+            "next_step": "step_280"
+          },
+          {
+            "step": "step_280",
+            "type": "standard",
+            "title": "TENTAR NOVAMENTE -> seleciona-cartao",
+            "output": {
+              "generic": []
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "invoke_another_action",
+              "invoke_action": {
+                "action": "action_25692",
+                "policy": "default",
+                "parameters": null,
+                "result_variable": "step_280_result_1",
+                "ignore_end_action_steps": false
+              }
+            },
+            "variable": "step_280",
+            "condition": {
+              "lt": [
+                {
+                  "skill_variable": "TentativasCartao"
+                },
+                {
+                  "scalar": "3"
+                }
+              ]
+            }
+          }
+        ],
+        "title": "hml/triagem/registra-tentativa",
+        "action": "action_8197",
+        "boosts": [],
+        "handlers": [],
+        "condition": {
+          "intent": "action_8197_intent_26833"
+        },
+        "variables": [
+          {
+            "variable": "step_222",
+            "data_type": "any"
+          },
+          {
+            "title": "LIMITE DE TENTATIVAS -> finaliza",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_280",
+            "data_type": "any"
+          },
+          {
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_280_result_1",
+            "data_type": "any"
+          },
+          {
+            "title": "LIMITE DE TENTATIVAS -> finaliza",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_440",
+            "data_type": "any"
+          },
+          {
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_440_result_1",
+            "data_type": "any"
+          }
+        ],
+        "launch_mode": "learning",
+        "next_action": "action_25692",
+        "topic_switch": {
+          "allowed_from": true,
+          "allowed_into": true,
+          "never_return": false
+        },
+        "disambiguation_opt_out": false
+      },
+      {
+        "type": "standard",
+        "steps": [
+          {
+            "step": "step_001",
+            "type": "standard",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "Acho que não entendi. Reformule sua pergunta."
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "end_action"
+            },
+            "variable": "step_001",
+            "condition": {
+              "lte": [
+                {
+                  "system_variable": "no_action_matches_count"
+                },
+                {
+                  "scalar": 3
+                }
+              ]
+            },
+            "next_step": "step_002"
+          },
+          {
+            "step": "step_002",
+            "type": "standard",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": ""
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "invoke_another_action_and_end",
+              "invoke_action": {
+                "action": "fallback",
+                "policy": "default",
+                "parameters": null,
+                "result_variable": "step_002_result_1",
+                "ignore_end_action_steps": false
+              }
+            },
+            "variable": "step_002",
+            "condition": {
+              "gt": [
+                {
+                  "system_variable": "no_action_matches_count"
+                },
+                {
+                  "scalar": 3
+                }
+              ]
+            }
+          }
+        ],
+        "title": "No matches",
+        "action": "anything_else",
+        "boosts": [],
+        "handlers": [],
+        "condition": {
+          "expression": "anything_else"
+        },
+        "variables": [
+          {
+            "title": "Receio não entender o que você está perguntando, por favor, refo",
+            "variable": "step_001",
+            "data_type": "any"
+          },
+          {
+            "variable": "step_002",
+            "data_type": "any"
+          },
+          {
+            "variable": "step_002_result_1",
+            "data_type": "any"
+          }
+        ],
+        "disambiguation_opt_out": true
+      },
+      {
+        "type": "standard",
+        "steps": [
+          {
+            "step": "digression_failure",
+            "type": "standard",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "Desculpe, não pude confirmar se você queria retornar ao tópico anterior, deixe-me conectar a um agente."
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "connect_to_agent",
+              "response": {
+                "transfer_info": {
+                  "target": {}
+                },
+                "agent_available": {
+                  "message": "Vamos mandá-lo para um agente disponível."
+                },
+                "agent_unavailable": {
+                  "message": "Não há agentes disponíveis neste momento. Quando houver um disponível, conectaremos você."
+                },
+                "message_to_human_agent": ""
+              }
+            },
+            "variable": "digression_failure",
+            "condition": {
+              "eq": [
+                {
+                  "system_variable": "fallback_reason"
+                },
+                {
+                  "scalar": "Failed to confirm topic return"
+                }
+              ]
+            },
+            "next_step": "step_001"
+          },
+          {
+            "step": "step_001",
+            "type": "standard",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "Acho que não entendi. Eu posso conectar você a um agente."
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "connect_to_agent",
+              "response": {
+                "transfer_info": {
+                  "target": {}
+                },
+                "agent_available": {
+                  "message": "Vamos mandá-lo para um agente disponível."
+                },
+                "agent_unavailable": {
+                  "message": "Não há agentes disponíveis neste momento. Quando houver um disponível, conectaremos você."
+                },
+                "message_to_human_agent": ""
+              }
+            },
+            "variable": "step_001",
+            "condition": {
+              "eq": [
+                {
+                  "system_variable": "fallback_reason"
+                },
+                {
+                  "scalar": "Step validation failed"
+                }
+              ]
+            },
+            "next_step": "step_002"
+          },
+          {
+            "step": "step_002",
+            "type": "standard",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "Desculpe não poder ajudá-lo. Vou conectá-lo a um agente imediatamente."
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "connect_to_agent",
+              "response": {
+                "transfer_info": {
+                  "target": {}
+                },
+                "agent_available": {
+                  "message": "Vamos mandá-lo para um agente disponível."
+                },
+                "agent_unavailable": {
+                  "message": "Não há agentes disponíveis neste momento. Quando houver um disponível, conectaremos você."
+                },
+                "message_to_human_agent": ""
+              }
+            },
+            "variable": "step_002",
+            "condition": {
+              "eq": [
+                {
+                  "system_variable": "fallback_reason"
+                },
+                {
+                  "scalar": "Agent requested"
+                }
+              ]
+            },
+            "next_step": "step_003"
+          },
+          {
+            "step": "step_003",
+            "type": "standard",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "Acho que não entendi o que você está pedindo; vou conectá-lo a um agente."
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "connect_to_agent",
+              "response": {
+                "transfer_info": {
+                  "target": {}
+                },
+                "agent_available": {
+                  "message": "Vamos mandá-lo para um agente disponível."
+                },
+                "agent_unavailable": {
+                  "message": "Não há agentes disponíveis neste momento. Quando houver um disponível, conectaremos você."
+                },
+                "message_to_human_agent": ""
+              }
+            },
+            "variable": "step_003",
+            "condition": {
+              "eq": [
+                {
+                  "system_variable": "fallback_reason"
+                },
+                {
+                  "scalar": "No action matches"
+                }
+              ]
+            },
+            "next_step": "step_004"
+          },
+          {
+            "step": "step_004",
+            "type": "standard",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "Parece que esta conversa seria melhor gerenciada por um agente humano. Deixe-me conectá-lo a um de nossos agentes."
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "connect_to_agent",
+              "response": {
+                "transfer_info": {
+                  "target": {}
+                },
+                "agent_available": {
+                  "message": "Vamos mandá-lo para um agente disponível."
+                },
+                "agent_unavailable": {
+                  "message": "Não há agentes disponíveis neste momento. Quando houver um disponível, conectaremos você."
+                },
+                "message_to_human_agent": ""
+              }
+            },
+            "variable": "step_004",
+            "condition": {
+              "eq": [
+                {
+                  "system_variable": "fallback_reason"
+                },
+                {
+                  "scalar": "Danger word detected"
+                }
+              ]
+            },
+            "next_step": "step_005"
+          },
+          {
+            "step": "step_005",
+            "type": "standard",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text": "Parece que esta conversa seria melhor gerenciada por um agente humano. Deixe-me conectá-lo a um de nossos agentes."
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "connect_to_agent",
+              "response": {
+                "transfer_info": {
+                  "target": {}
+                },
+                "agent_available": {
+                  "message": "Vamos mandá-lo para um agente disponível."
+                },
+                "agent_unavailable": {
+                  "message": "Não há agentes disponíveis neste momento. Quando houver um disponível, conectaremos você."
+                },
+                "message_to_human_agent": ""
+              }
+            },
+            "variable": "step_005",
+            "condition": {
+              "eq": [
+                {
+                  "system_variable": "fallback_reason"
+                },
+                {
+                  "scalar": "Profanity detected"
+                }
+              ]
+            }
+          }
+        ],
+        "title": "Fallback",
+        "action": "fallback",
+        "boosts": [],
+        "handlers": [],
+        "condition": {
+          "intent": "fallback_connect_to_agent"
+        },
+        "variables": [
+          {
+            "title": "Falha ao retornar para o tópico",
+            "variable": "digression_failure",
+            "data_type": "any"
+          },
+          {
+            "title": "Acho que não entendi. Eu posso conectar você a um agente.",
+            "variable": "step_001",
+            "data_type": "any"
+          },
+          {
+            "title": "Desculpe não poder ajudá-lo. Vou conectá-lo a um agente imediata",
+            "variable": "step_002",
+            "data_type": "any"
+          },
+          {
+            "title": "Acho que não entendi o que você está pedindo; vou conectá-lo a u",
+            "variable": "step_003",
+            "data_type": "any"
+          },
+          {
+            "title": "Parece que esta conversa seria melhor gerenciada",
+            "variable": "step_004",
+            "data_type": "any"
+          },
+          {
+            "title": "Profanidade - Parece que esta conversa",
+            "variable": "step_005",
+            "data_type": "any"
+          }
+        ],
+        "next_action": "run_always",
+        "disambiguation_opt_out": true
+      },
+      {
+        "type": "standard",
+        "steps": [
+          {
+            "step": "danger_word_detected",
+            "type": "standard",
+            "title": "Connect to agent",
+            "handlers": [],
+            "resolver": {
+              "type": "fallback"
+            },
+            "variable": "danger_word_detected_variable",
+            "condition": {
+              "entity": "danger_words"
+            },
+            "next_step": "profanity_detected"
+          },
+          {
+            "step": "profanity_detected",
+            "type": "standard",
+            "title": "Show warning",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text_expression": {
+                        "concat": [
+                          {
+                            "scalar": "Use o idioma apropriado ao interagir com o assistente."
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [
+              {
+                "type": "max_hits",
+                "handler": "max_hits_handler",
+                "resolver": {
+                  "type": "fallback"
+                }
+              }
+            ],
+            "max_hits": 2,
+            "resolver": {
+              "type": "end_action"
+            },
+            "variable": "profanity_detected_variable",
+            "condition": {
+              "entity": "profane_words"
+            }
+          }
+        ],
+        "title": "Trigger word detected",
+        "action": "run_always",
+        "boosts": [],
+        "handlers": [],
+        "variables": [
+          {
+            "title": "Profanity detected",
+            "variable": "danger_word_detected_variable",
+            "data_type": "any"
+          },
+          {
+            "title": "Profane word detected",
+            "variable": "profanity_detected_variable",
+            "data_type": "any"
+          }
+        ],
+        "next_action": "anything_else"
+      },
+      {
+        "type": "standard",
+        "steps": [
+          {
+            "step": "step_598",
+            "type": "standard",
+            "context": {
+              "variables": [
+                {
+                  "value": {
+                    "scalar": "\"HML\""
+                  },
+                  "skill_variable": "ENV"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "continue"
+            },
+            "variable": "step_598",
+            "next_step": "step_966"
+          },
+          {
+            "step": "step_966",
+            "type": "standard",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text_expression": {
+                        "concat": [
+                          {
+                            "scalar": "ENV informado: "
+                          },
+                          {
+                            "skill_variable": "ENV"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "continue"
+            },
+            "variable": "step_966",
+            "next_step": "step_166"
+          },
+          {
+            "step": "step_166",
+            "type": "standard",
+            "output": {
+              "generic": [
+                {
+                  "values": [
+                    {
+                      "text_expression": {
+                        "concat": [
+                          {
+                            "scalar": "<prosody rate=\"1.0\" pitch=\"1.2\">Podemos confirmar a liberação?</prosody>"
+                          }
+                        ]
+                      }
+                    }
+                  ],
+                  "response_type": "text",
+                  "selection_policy": "sequential"
+                }
+              ]
+            },
+            "context": {
+              "variables": []
+            },
+            "handlers": [],
+            "resolver": {
+              "type": "end_action"
+            },
+            "variable": "step_166"
+          }
+        ],
+        "title": "Greet customer",
+        "action": "welcome",
+        "boosts": [],
+        "handlers": [],
+        "condition": {
+          "expression": "welcome"
+        },
+        "variables": [
+          {
+            "title": "<prosody rate=\"1.0\" pitch=\"1.2\">Podemos confirmar a liberação?</",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_166",
+            "data_type": "any"
+          },
+          {
+            "title": "No response",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_598",
+            "data_type": "any"
+          },
+          {
+            "title": "ENV informado: {variable}",
+            "privacy": {
+              "enabled": false
+            },
+            "variable": "step_966",
+            "data_type": "any"
+          }
+        ],
+        "next_action": "action_49668",
+        "disambiguation_opt_out": true
+      }
+    ],
+    "intents": [
+      {
+        "intent": "action_25692_intent_38997",
+        "examples": [
+          {
+            "text": "hml/triagem/seleciona-cartão"
+          }
+        ]
+      },
+      {
+        "intent": "action_49668_intent_40724",
+        "examples": [
+          {
+            "text": "hml/triagem/finaliza"
+          }
+        ]
+      },
+      {
+        "intent": "action_49668_intent_40724-2",
+        "examples": []
+      },
+      {
+        "intent": "action_8087_intent_41549",
+        "examples": [
+          {
+            "text": "triagem"
+          }
+        ]
+      },
+      {
+        "intent": "action_8197_intent_26833",
+        "examples": [
+          {
+            "text": "hml/triagem/registra-tentativa"
+          }
+        ]
+      },
+      {
+        "intent": "fallback_connect_to_agent",
+        "examples": [
+          {
+            "text": "Eu quero contatar um agente/Eu quero entrar em contato com um agente"
+          },
+          {
+            "text": "Eu vou falar com um agente/ Eu vou falar com um agente de suporte."
+          },
+          {
+            "text": "Por favor, você pode entrar em contato comigo com um agente humano?"
+          },
+          {
+            "text": "Preciso contatar a um atendente"
+          },
+          {
+            "text": "Você pode me conectar com uma pessoa real?"
+          }
+        ],
+        "description": "Solicite um agente humano."
+      }
+    ],
+    "entities": [
+      {
+        "entity": "danger_words",
+        "values": [],
+        "fuzzy_match": false
+      },
+      {
+        "entity": "profane_words",
+        "values": [],
+        "fuzzy_match": false
+      },
+      {
+        "entity": "sys-number",
+        "values": []
+      },
+      {
+        "entity": "sys-yes-no",
+        "values": []
+      }
+    ],
+    "metadata": {
+      "api_version": {
+        "major_version": "v2",
+        "minor_version": "2018-11-08"
+      }
+    },
+    "variables": [
+      {
+        "title": "EntradaValida",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "EntradaValida",
+        "data_type": "boolean",
+        "description": "",
+        "initial_value": {
+          "scalar": false
+        }
+      },
+      {
+        "title": "ENV",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "ENV",
+        "data_type": "string",
+        "description": ""
+      },
+      {
+        "title": "FALSE",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "FALSE",
+        "data_type": "boolean",
+        "description": "",
+        "initial_value": {
+          "scalar": false
+        }
+      },
+      {
+        "title": "HML",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "HML",
+        "data_type": "string",
+        "description": "",
+        "initial_value": {
+          "scalar": "HML"
+        }
+      },
+      {
+        "title": "PROD",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "PROD",
+        "data_type": "string",
+        "description": "",
+        "initial_value": {
+          "scalar": "PRD"
+        }
+      },
+      {
+        "title": "SelectedCard",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "SelectedCard",
+        "data_type": "any",
+        "description": ""
+      },
+      {
+        "title": "TentativasCartao",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "TentativasCartao",
+        "data_type": "number",
+        "description": ""
+      },
+      {
+        "title": "TRUE",
+        "privacy": {
+          "enabled": false
+        },
+        "variable": "TRUE",
+        "data_type": "boolean",
+        "description": "",
+        "initial_value": {
+          "scalar": true
+        }
+      }
+    ],
+    "data_types": [],
+    "collections": [
+      {
+        "title": "prod",
+        "collection": "collection_4598",
+        "action_references": [
+          {
+            "action": "action_49668-2"
+          }
+        ]
+      },
+      {
+        "title": "hml",
+        "collection": "collection_45544",
+        "action_references": [
+          {
+            "action": "action_49668"
+          },
+          {
+            "action": "action_8197"
+          },
+          {
+            "action": "action_25692"
+          },
+          {
+            "action": "action_8087"
+          }
+        ]
+      }
+    ],
+    "counterexamples": [],
+    "system_settings": {
+      "variable": {
+        "format": {
+          "time": {
+            "pattern": "short"
+          },
+          "currency": {
+            "fraction_digits": 2
+          }
+        }
+      },
+      "auto_learn": {
+        "apply": true
+      },
+      "topic_switch": {
+        "enabled": true,
+        "messages": {
+          "enable_confirmation": true,
+          "confirmation_failure": {
+            "generic": [
+              {
+                "values": [
+                  {
+                    "text_expression": {
+                      "concat": [
+                        {
+                          "scalar": "Desculpe, não entendi, confirme, por favor."
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "response_type": "text",
+                "selection_policy": "sequential"
+              }
+            ]
+          },
+          "confirmation_request": {
+            "generic": [
+              {
+                "values": [
+                  {
+                    "text_expression": {
+                      "concat": [
+                        {
+                          "scalar": "Deseja continuar com o tópico anterior: "
+                        },
+                        {
+                          "system_variable": "digressed_from"
+                        },
+                        {
+                          "scalar": "?"
+                        }
+                      ]
+                    }
+                  }
+                ],
+                "response_type": "text",
+                "selection_policy": "sequential"
+              },
+              {
+                "options": [
+                  {
+                    "label": "Sim",
+                    "value": {
+                      "input": {
+                        "text": "Sim"
+                      }
+                    }
+                  },
+                  {
+                    "label": "Não",
+                    "value": {
+                      "input": {
+                        "text": "Não"
+                      }
+                    }
+                  }
+                ],
+                "response_type": "option",
+                "repeat_on_reprompt": true
+              }
+            ]
+          }
+        },
+        "max_tries": 3
+      },
+      "disambiguation": {
+        "prompt": "Você quis dizer:",
+        "enabled": true,
+        "randomize": true,
+        "max_suggestions": 5,
+        "suggestion_text_policy": "title",
+        "none_of_the_above_prompt": "Nenhum dos itens acima",
+        "use_connect_to_support_prompt": "conectar ao suporte",
+        "single_answer_clarification_prompt": "Outra coisa"
+      },
+      "search_routing": {
+        "target": "conversational_search"
+      }
+    },
+    "learning_opt_out": false
+  },
+  "description": "created for assistant e6549787-f962-4689-93a4-64afeaeb69ed",
+  "assistant_id": "e6549787-f962-4689-93a4-64afeaeb69ed",
+  "workspace_id": "a849d007-f32e-4377-95d1-6743a224e483",
+  "dialog_settings": {},
+  "next_snapshot_version": "1",
+  "environment_id": "9f783e51-7727-4882-96bc-f5ee64b77f53"
+}
