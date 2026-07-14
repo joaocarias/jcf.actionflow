@@ -33,6 +33,33 @@ public class WorkspaceValidatorTests
         Assert.Contains(issues, i => i.Code == "intent.orphan");
         Assert.Contains(issues, i =>
             i.Code == "step.invoke.cross_collection" && i.Severity == IssueSeverity.Warning && i.ActionId == "a2");
+        // a3 is never pointed at by any next_action — invoke_action alone (a2's step) doesn't count.
+        Assert.Contains(issues, i => i.Code == "action.unreachable" && i.ActionId == "a3");
+    }
+
+    [Fact]
+    public void An_action_with_no_incoming_next_action_is_flagged_unreachable()
+    {
+        var workspace = new WorkspaceData
+        {
+            Actions =
+            [
+                new ActionDefinition
+                {
+                    Action = "welcome",
+                    Condition = new Condition { Expression = "welcome" },
+                    NextAction = "fallback",
+                },
+                new ActionDefinition { Action = "fallback", Condition = new Condition { Intent = "fallback_connect_to_agent" } },
+                new ActionDefinition { Action = "orphan_copy", Condition = new Condition { Intent = "orphan_intent" }, NextAction = "fallback" },
+            ],
+        };
+
+        var issues = WorkspaceValidator.Validate(workspace);
+
+        Assert.Contains(issues, i => i.Code == "action.unreachable" && i.ActionId == "orphan_copy");
+        Assert.DoesNotContain(issues, i => i.Code == "action.unreachable" && i.ActionId == "welcome");
+        Assert.DoesNotContain(issues, i => i.Code == "action.unreachable" && i.ActionId == "fallback");
     }
 
     private static WorkspaceData BuildWorkspaceWithSyntheticDefects()

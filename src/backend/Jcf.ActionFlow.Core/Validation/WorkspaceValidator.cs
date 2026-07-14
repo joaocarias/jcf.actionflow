@@ -84,6 +84,23 @@ public static class WorkspaceValidator
             }
         }
 
+        var nextActionTargets = workspace.Actions
+            .Select(a => a.NextAction)
+            .Where(n => n is not null)
+            .ToHashSet(StringComparer.Ordinal)!;
+
+        foreach (var action in workspace.Actions)
+        {
+            if (SystemActions.IsSystemAction(action.Action)) continue;
+            if (nextActionTargets.Contains(action.Action)) continue;
+
+            issues.Add(new ValidationIssue(
+                IssueSeverity.Error,
+                "action.unreachable",
+                $"Action '{action.Action}' não é apontada pelo next_action de nenhuma outra action; o Watson rejeita o import por falta de alcançabilidade (\"Each action must be reachable by all previous actions via next_action\").",
+                action.Action));
+        }
+
         foreach (var intent in workspace.Intents)
         {
             if (intent.Name.StartsWith("action_", StringComparison.Ordinal) && !usedIntentNames.Contains(intent.Name))

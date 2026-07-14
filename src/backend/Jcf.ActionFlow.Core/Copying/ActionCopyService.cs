@@ -63,7 +63,9 @@ public sealed class ActionCopyService
     /// clone when <see cref="CopyActionRequest.ReplaceActionId"/> is set), clone its intent
     /// the same way, register the clone in the target collection, then resolve every outbound
     /// reference (next_action + each step's invoke_another_action) per
-    /// <paramref name="request"/>'s ReferenceStrategy, and finally apply the title prefix swap.
+    /// <paramref name="request"/>'s ReferenceStrategy, splice the clone into the next_action
+    /// chain (see <see cref="SpliceIntoNextActionChain"/> — required for Watson to accept the
+    /// import), and finally apply the title prefix swap.
     /// </summary>
     private static CopyActionResult Copy(
         WorkspaceData workspace,
@@ -122,6 +124,7 @@ public sealed class ActionCopyService
         };
 
         RemapOutboundReferences(clone, ResolveReference);
+        SpliceIntoNextActionChain(workspace, clone, newActionId, warnings);
 
         if (request.TitlePrefix is { Length: > 0 } prefix)
         {
@@ -213,6 +216,31 @@ public sealed class ActionCopyService
                 }
             }
         }
+    }
+
+    /// <summary>
+    /// Watson rejects an import unless every action is reachable via next_action from some
+    /// other action ("Each action must be reachable by all previous actions via next_action").
+    /// A freshly appended clone has nothing pointing at it, so we splice it in front of
+    /// whichever action currently flows into the same target the clone itself flows into —
+    /// that predecessor now runs through the clone first, and the clone still lands on the
+    /// original target afterward, so nothing downstream loses reachability.
+    /// </summary>
+    private static void SpliceIntoNextActionChain(
+        WorkspaceData workspace,
+        ActionDefinition clone,
+        string newActionId,
+        List<string> warnings)
+    {
+        if (clone.NextAction is not { } target) return;
+
+        var predecessor = workspace.Actions.FirstOrDefault(a => a.NextAction == target);
+        if (predecessor is null) return;
+
+        predecessor.NextAction = newActionId;
+        warnings.Add(
+            $"'{predecessor.Action}.next_action' redirecionado para '{newActionId}' (antes '{target}') " +
+            "para manter a cópia alcançável via next_action, como o Watson exige.");
     }
 
     /// <summary>keep: leave the reference alone, but flag it if it now crosses out of the target collection.</summary>
