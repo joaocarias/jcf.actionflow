@@ -115,6 +115,9 @@ public sealed class WorkspaceService(IWorkspaceRepository repository, ActionCopy
             .ToList();
     }
 
+    public IReadOnlyList<VariableUsage> GetVariables(string id) =>
+        VariableUsageAnalyzer.Analyze(GetSession(id).Export.Workspace);
+
     public ActionDefinition GetActionDetail(string id, string actionId) =>
         WorkspaceLookups.FindAction(GetSession(id).Export.Workspace, actionId);
 

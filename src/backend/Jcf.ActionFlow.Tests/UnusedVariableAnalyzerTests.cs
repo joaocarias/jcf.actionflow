@@ -20,35 +20,31 @@ public class UnusedVariableAnalyzerTests
     }
 
     [Fact]
-    public void Sample_workspace_does_not_flag_a_variable_read_via_interpolation()
+    public void Sample_workspace_does_not_flag_a_skill_variable_read_via_interpolation()
     {
         var workspace = SampleWorkspaceFixture.Load().Workspace;
 
         var unused = UnusedVariableAnalyzer.FindUnusedVariables(workspace);
 
-        // step_174 ("ASK NUMERO CARTAO") is read back via "${step_174}" in step_801's and
-        // step_774's expressions.
-        Assert.DoesNotContain("step_174", unused["action_25692"]);
+        // action_8197's "TentativasCartao" is set via step_222's context assignment and read
+        // back both by its own increment expression and as an operand in step_440's/step_280's
+        // conditions.
+        Assert.DoesNotContain("TentativasCartao", unused.GetValueOrDefault("action_8197", []));
     }
 
     [Fact]
-    public void Local_variable_written_and_never_read_is_flagged()
+    public void Local_step_and_result_variables_are_never_flagged_even_when_never_read()
     {
-        var workspace = WorkspaceWithLocalVariable(read: false);
+        // Watson auto-declares one local variable per step (its own "variable", or a resolver's
+        // "result_variable"); almost none of them are ever read on purpose, so only global
+        // (workspace.variables[]) state is worth an "unused" warning - see the sample
+        // workspace's own action_49668 ("finaliza"), whose single step sets "step_798" and
+        // never reads it.
+        var workspace = SampleWorkspaceFixture.Load().Workspace;
 
         var unused = UnusedVariableAnalyzer.FindUnusedVariables(workspace);
 
-        Assert.Equal(["captured"], unused["a1"]);
-    }
-
-    [Fact]
-    public void Local_variable_read_via_interpolation_elsewhere_is_not_flagged()
-    {
-        var workspace = WorkspaceWithLocalVariable(read: true);
-
-        var unused = UnusedVariableAnalyzer.FindUnusedVariables(workspace);
-
-        Assert.DoesNotContain("a1", unused.Keys);
+        Assert.DoesNotContain("action_49668", unused.Keys);
     }
 
     [Fact]
@@ -125,33 +121,6 @@ public class UnusedVariableAnalyzerTests
         var unused = UnusedVariableAnalyzer.FindUnusedVariables(workspace);
 
         Assert.DoesNotContain("a1", unused.Keys);
-    }
-
-    private static WorkspaceData WorkspaceWithLocalVariable(bool read)
-    {
-        var s2 = new Step
-        {
-            StepId = "s2",
-            Resolver = new Resolver { Type = ResolverTypes.Continue },
-            Condition = read ? new Condition { Expression = "${captured} == true" } : null,
-        };
-
-        return new WorkspaceData
-        {
-            Actions =
-            [
-                new ActionDefinition
-                {
-                    Action = "a1",
-                    Variables = [new VariableDeclaration { Variable = "captured" }],
-                    Steps =
-                    [
-                        new Step { StepId = "s1", Variable = "captured", Resolver = new Resolver { Type = ResolverTypes.Continue } },
-                        s2,
-                    ],
-                },
-            ],
-        };
     }
 
     private static Step WriteSkillVariable(string stepId, string skillVariable) => new()

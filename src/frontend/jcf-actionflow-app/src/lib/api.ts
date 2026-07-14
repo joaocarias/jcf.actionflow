@@ -9,6 +9,7 @@ import type {
   ImportResponse,
   ProblemDetails,
   ValidationIssue,
+  VariableUsage,
   WatsonAction,
   WorkspaceSummary,
 } from './types'
@@ -66,6 +67,10 @@ export function getCollections(sessionId: string): Promise<CollectionSummary[]> 
 
 export function getActions(sessionId: string): Promise<ActionSummary[]> {
   return request(`/api/workspaces/${sessionId}/actions`)
+}
+
+export function getVariables(sessionId: string): Promise<VariableUsage[]> {
+  return request(`/api/workspaces/${sessionId}/variables`)
 }
 
 export function getActionDetail(sessionId: string, actionId: string): Promise<WatsonAction> {

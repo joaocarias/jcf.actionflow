@@ -80,3 +80,13 @@ export function extractOutputText(output: unknown): string | null {
 export function isFreeTextQuestion(question: unknown): boolean {
   return isPlainObject(question) && question.free_text === true
 }
+
+/** Global (skill) variable names a step's `context.variables[]` assigns. */
+export function contextVariableTargets(context: unknown): string[] {
+  if (!isPlainObject(context) || !Array.isArray(context.variables)) return []
+
+  return context.variables
+    .filter(isPlainObject)
+    .map((assignment) => assignment.skill_variable)
+    .filter((name): name is string => typeof name === 'string')
+}

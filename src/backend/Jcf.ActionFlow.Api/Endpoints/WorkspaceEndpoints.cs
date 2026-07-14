@@ -45,6 +45,11 @@ public static class WorkspaceEndpoints
                 Results.Ok(service.GetActions(id)))
             .WithName("GetActions");
 
+        group.MapGet("/{id}/variables", (string id, WorkspaceService service) =>
+                Results.Ok(service.GetVariables(id)))
+            .WithName("GetVariables")
+            .WithSummary("Lista workspace.variables[] com onde cada uma é atribuída (set) e usada (get).");
+
         group.MapGet("/{id}/actions/{actionId}", (string id, string actionId, WorkspaceService service) =>
                 Results.Ok(service.GetActionDetail(id, actionId)))
             .WithName("GetActionDetail");

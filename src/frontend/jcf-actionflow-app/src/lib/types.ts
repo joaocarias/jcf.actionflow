@@ -57,6 +57,17 @@ export interface ActionSummary {
   unusedVariables: string[]
 }
 
+export interface VariableUsage {
+  variable: string
+  title: string | null
+  dataType: string | null
+  isSet: boolean
+  setInActions: string[]
+  hasDefaultValue: boolean
+  isUsed: boolean
+  usedInActions: string[]
+}
+
 export interface GraphNode {
   id: string
   label: string

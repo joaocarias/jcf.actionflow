@@ -21,7 +21,14 @@ import type {
   WatsonAction,
   WatsonStep,
 } from '../lib/types'
-import { SYSTEM_ACTION_IDS, extractOutputText, formatCondition, isFreeTextQuestion, rootActionId } from '../lib/watson'
+import {
+  contextVariableTargets,
+  extractOutputText,
+  formatCondition,
+  isFreeTextQuestion,
+  rootActionId,
+  SYSTEM_ACTION_IDS,
+} from '../lib/watson'
 
 type LoadState =
   | { status: 'loading' }
@@ -583,9 +590,7 @@ function StepCard({ step, index, unusedVariables }: { step: WatsonStep; index: n
   const conditionLabel = formatCondition(step.condition)
   const outputText = extractOutputText(step.output)
   const invoke = step.resolver.invoke_action
-  const unusedByThisStep = [step.variable, invoke?.result_variable].filter(
-    (name): name is string => Boolean(name) && unusedVariables.includes(name!),
-  )
+  const unusedByThisStep = contextVariableTargets(step.context).filter((name) => unusedVariables.includes(name))
 
   return (
     <li className="rounded-lg border border-slate-200 bg-white p-4">

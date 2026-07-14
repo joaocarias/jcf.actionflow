@@ -2,9 +2,24 @@ import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
 import { EnvironmentFlag, StepCountMismatchFlag, UnusedVariablesFlag } from '../components/EnvironmentFlag'
 import { IssueList } from '../components/IssueList'
-import { ApiError, exportWorkspace, getActions, getCollections, getWorkspaceSummary, validateWorkspace } from '../lib/api'
+import {
+  ApiError,
+  exportWorkspace,
+  getActions,
+  getCollections,
+  getVariables,
+  getWorkspaceSummary,
+  validateWorkspace,
+} from '../lib/api'
 import { downloadTextFile } from '../lib/download'
-import type { ActionSummary, CollectionSummary, EnvironmentStepCount, ValidationIssue, WorkspaceSummary } from '../lib/types'
+import type {
+  ActionSummary,
+  CollectionSummary,
+  EnvironmentStepCount,
+  ValidationIssue,
+  VariableUsage,
+  WorkspaceSummary,
+} from '../lib/types'
 
 type LoadState =
   | { status: 'loading' }
@@ -15,6 +30,7 @@ type LoadState =
       systemActions: ActionSummary[]
       orphanActions: ActionSummary[]
       issues: ValidationIssue[]
+      variables: VariableUsage[]
     }
   | { status: 'error'; message: string }
 
@@ -34,8 +50,9 @@ export function Workspace() {
       getCollections(sessionId),
       getActions(sessionId),
       validateWorkspace(sessionId),
+      getVariables(sessionId),
     ])
-      .then(([summary, collections, actions, issues]) => {
+      .then(([summary, collections, actions, issues, variables]) => {
         if (cancelled) return
         setState({
           status: 'ready',
@@ -44,6 +61,7 @@ export function Workspace() {
           systemActions: actions.filter((a) => a.isSystemAction),
           orphanActions: actions.filter((a) => !a.isSystemAction && a.isOrphan),
           issues,
+          variables,
         })
       })
       .catch((error: unknown) => {
@@ -80,7 +98,7 @@ export function Workspace() {
     )
   }
 
-  const { summary, collections, systemActions, orphanActions, issues } = state
+  const { summary, collections, systemActions, orphanActions, issues, variables } = state
 
   const handleDownload = async () => {
     if (!sessionId) return
@@ -180,7 +198,87 @@ export function Workspace() {
             }))}
           />
         )}
+
+        <VariablesSection sessionId={sessionId!} variables={variables} />
       </div>
+    </div>
+  )
+}
+
+function VariablesSection({ sessionId, variables }: { sessionId: string; variables: VariableUsage[] }) {
+  if (variables.length === 0) return null
+
+  return (
+    <section>
+      <h2 className="text-sm font-semibold uppercase tracking-wide text-slate-500">
+        Variáveis <span className="font-normal normal-case text-slate-400">(workspace.variables)</span>
+      </h2>
+      <div className="mt-3 overflow-hidden rounded-lg border border-slate-200 bg-white">
+        <table className="w-full text-left text-sm">
+          <thead className="border-b border-slate-200 bg-slate-50 text-xs font-medium uppercase tracking-wide text-slate-500">
+            <tr>
+              <th className="px-4 py-2">Variável</th>
+              <th className="px-4 py-2">Tipo</th>
+              <th className="px-4 py-2">Setada (set)</th>
+              <th className="px-4 py-2">Usada depois (get)</th>
+            </tr>
+          </thead>
+          <tbody className="divide-y divide-slate-100">
+            {variables.map((v) => (
+              <tr key={v.variable} className={!v.isUsed ? 'bg-purple-50/40' : undefined}>
+                <td className="px-4 py-2 font-mono text-xs text-slate-700">{v.variable}</td>
+                <td className="px-4 py-2 text-xs text-slate-500">{v.dataType ?? '—'}</td>
+                <td className="px-4 py-2">
+                  <VariableActionsCell
+                    sessionId={sessionId}
+                    ok={v.isSet}
+                    actionIds={v.setInActions}
+                    hasDefaultValue={v.hasDefaultValue}
+                  />
+                </td>
+                <td className="px-4 py-2">
+                  <VariableActionsCell sessionId={sessionId} ok={v.isUsed} actionIds={v.usedInActions} />
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </section>
+  )
+}
+
+function VariableActionsCell({
+  sessionId,
+  ok,
+  actionIds,
+  hasDefaultValue,
+}: {
+  sessionId: string
+  ok: boolean
+  actionIds: string[]
+  hasDefaultValue?: boolean
+}) {
+  return (
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className={`text-xs font-semibold ${ok ? 'text-emerald-600' : 'text-red-600'}`}>{ok ? '✓' : '✗'}</span>
+      {hasDefaultValue && (
+        <span
+          title="Definida via initial_value da declaração, não por nenhuma action"
+          className="inline-flex shrink-0 items-center gap-1 rounded-full bg-sky-100 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-sky-700"
+        >
+          ℹ default
+        </span>
+      )}
+      {actionIds.map((actionId) => (
+        <Link
+          key={actionId}
+          to={`/workspaces/${sessionId}/actions/${actionId}`}
+          className="rounded bg-slate-100 px-1.5 py-0.5 font-mono text-[10px] text-slate-600 hover:bg-slate-200"
+        >
+          {actionId}
+        </Link>
+      ))}
     </div>
   )
 }
