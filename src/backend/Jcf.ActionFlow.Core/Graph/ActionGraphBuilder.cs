@@ -16,6 +16,12 @@ public static class ActionGraphBuilder
     {
         var actionIds = workspace.Actions.Select(a => a.Action).ToHashSet(StringComparer.Ordinal);
         var collectionByAction = WorkspaceLookups.CollectionIdByAction(workspace);
+        var missingEnvByAction = EnvironmentActionAnalyzer.FindMissingEnvironments(workspace);
+        var stepMismatchByAction = EnvironmentActionAnalyzer.FindStepCountMismatches(workspace);
+        var unusedVariablesByAction = UnusedVariableAnalyzer.FindUnusedVariables(workspace);
+        IReadOnlyList<string> noMissingEnvironments = [];
+        IReadOnlyList<EnvironmentStepCount> noStepCountMismatches = [];
+        IReadOnlyList<string> noUnusedVariables = [];
 
         var nodes = workspace.Actions.Select(a =>
         {
@@ -27,6 +33,9 @@ public static class ActionGraphBuilder
                 ["isSystem"] = isSystem,
                 ["stepCount"] = a.Steps.Count,
                 ["launchMode"] = a.LaunchMode,
+                ["missingInEnvironments"] = missingEnvByAction.GetValueOrDefault(a.Action, noMissingEnvironments),
+                ["stepCountMismatches"] = stepMismatchByAction.GetValueOrDefault(a.Action, noStepCountMismatches),
+                ["unusedVariables"] = unusedVariablesByAction.GetValueOrDefault(a.Action, noUnusedVariables),
             };
             return new GraphNode(a.Action, a.Title ?? a.Action, group, "action", data);
         }).ToList();

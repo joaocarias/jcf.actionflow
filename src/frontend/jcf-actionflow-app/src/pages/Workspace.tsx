@@ -1,9 +1,10 @@
 import { useEffect, useState } from 'react'
 import { Link, useParams } from 'react-router-dom'
+import { EnvironmentFlag, StepCountMismatchFlag, UnusedVariablesFlag } from '../components/EnvironmentFlag'
 import { IssueList } from '../components/IssueList'
 import { ApiError, exportWorkspace, getActions, getCollections, getWorkspaceSummary, validateWorkspace } from '../lib/api'
 import { downloadTextFile } from '../lib/download'
-import type { ActionSummary, CollectionSummary, ValidationIssue, WorkspaceSummary } from '../lib/types'
+import type { ActionSummary, CollectionSummary, EnvironmentStepCount, ValidationIssue, WorkspaceSummary } from '../lib/types'
 
 type LoadState =
   | { status: 'loading' }
@@ -138,7 +139,14 @@ export function Workspace() {
             key={collection.collectionId}
             sessionId={sessionId!}
             title={collection.title ?? collection.collectionId}
-            rows={collection.actions.map((a) => ({ id: a.actionId, title: a.title, stepCount: a.stepCount }))}
+            rows={collection.actions.map((a) => ({
+              id: a.actionId,
+              title: a.title,
+              stepCount: a.stepCount,
+              missingInEnvironments: a.missingInEnvironments,
+              stepCountMismatches: a.stepCountMismatches,
+              unusedVariables: a.unusedVariables,
+            }))}
             emptyLabel="Nenhuma action nesta collection."
           />
         ))}
@@ -147,7 +155,14 @@ export function Workspace() {
           <ActionSection
             sessionId={sessionId!}
             title="Actions de sistema"
-            rows={systemActions.map((a) => ({ id: a.actionId, title: a.title, stepCount: a.stepCount }))}
+            rows={systemActions.map((a) => ({
+              id: a.actionId,
+              title: a.title,
+              stepCount: a.stepCount,
+              missingInEnvironments: a.missingInEnvironments,
+              stepCountMismatches: a.stepCountMismatches,
+              unusedVariables: a.unusedVariables,
+            }))}
           />
         )}
 
@@ -155,7 +170,14 @@ export function Workspace() {
           <ActionSection
             sessionId={sessionId!}
             title="Sem collection"
-            rows={orphanActions.map((a) => ({ id: a.actionId, title: a.title, stepCount: a.stepCount }))}
+            rows={orphanActions.map((a) => ({
+              id: a.actionId,
+              title: a.title,
+              stepCount: a.stepCount,
+              missingInEnvironments: a.missingInEnvironments,
+              stepCountMismatches: a.stepCountMismatches,
+              unusedVariables: a.unusedVariables,
+            }))}
           />
         )}
       </div>
@@ -163,7 +185,14 @@ export function Workspace() {
   )
 }
 
-type ActionRow = { id: string; title: string | null; stepCount: number }
+type ActionRow = {
+  id: string
+  title: string | null
+  stepCount: number
+  missingInEnvironments: string[]
+  stepCountMismatches: EnvironmentStepCount[]
+  unusedVariables: string[]
+}
 
 function ActionSection({
   sessionId,
@@ -187,7 +216,12 @@ function ActionSection({
               className="flex items-center justify-between px-4 py-3 text-sm transition-colors hover:bg-slate-50"
             >
               <div>
-                <p className="font-medium text-slate-800">{row.title ?? row.id}</p>
+                <div className="flex items-center gap-2">
+                  <p className="font-medium text-slate-800">{row.title ?? row.id}</p>
+                  <EnvironmentFlag missingInEnvironments={row.missingInEnvironments} />
+                  <StepCountMismatchFlag stepCount={row.stepCount} mismatches={row.stepCountMismatches} />
+                  <UnusedVariablesFlag unusedVariables={row.unusedVariables} />
+                </div>
                 <p className="font-mono text-xs text-slate-400">{row.id}</p>
               </div>
               <span className="text-xs text-slate-500">{row.stepCount} step(s)</span>

@@ -10,7 +10,13 @@ public sealed record WorkspaceSummary(
     int VariableCount,
     int CollectionCount);
 
-public sealed record CollectionActionSummary(string ActionId, string? Title, int StepCount);
+public sealed record CollectionActionSummary(
+    string ActionId,
+    string? Title,
+    int StepCount,
+    IReadOnlyList<string> MissingInEnvironments,
+    IReadOnlyList<EnvironmentStepCount> StepCountMismatches,
+    IReadOnlyList<string> UnusedVariables);
 
 public sealed record CollectionSummary(
     string CollectionId,
@@ -23,6 +29,9 @@ public sealed record ActionSummary(
     bool IsSystemAction,
     bool IsOrphan,
     string? CollectionId,
-    int StepCount);
+    int StepCount,
+    IReadOnlyList<string> MissingInEnvironments,
+    IReadOnlyList<EnvironmentStepCount> StepCountMismatches,
+    IReadOnlyList<string> UnusedVariables);
 
 public sealed record DeleteActionResult(string ActionId, IReadOnlyList<string> OrphanedReferences);

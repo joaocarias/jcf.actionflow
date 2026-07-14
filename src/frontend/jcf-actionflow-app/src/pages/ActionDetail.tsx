@@ -1,8 +1,18 @@
 import { useEffect, useState } from 'react'
 import { Link, useNavigate, useParams } from 'react-router-dom'
+import { EnvironmentFlag, StepCountMismatchFlag, UnusedVariablesFlag } from '../components/EnvironmentFlag'
 import { IssueList } from '../components/IssueList'
-import { ApiError, copyOrMoveAction, deleteAction, getActionDetail, getCollections, renameAction } from '../lib/api'
+import {
+  ApiError,
+  copyOrMoveAction,
+  deleteAction,
+  getActionDetail,
+  getActions,
+  getCollections,
+  renameAction,
+} from '../lib/api'
 import type {
+  ActionSummary,
   CollectionSummary,
   CopyActionResponse,
   CopyMode,
@@ -25,6 +35,7 @@ export function ActionDetail() {
   const [state, setState] = useState<LoadState>({ status: 'loading' })
   const [action, setAction] = useState<WatsonAction | null>(null)
   const [collections, setCollections] = useState<CollectionSummary[]>([])
+  const [actions, setActions] = useState<ActionSummary[]>([])
   const [lastIssues, setLastIssues] = useState<ValidationIssue[]>([])
 
   useEffect(() => {
@@ -33,11 +44,12 @@ export function ActionDetail() {
     setState({ status: 'loading' })
     setLastIssues([])
 
-    Promise.all([getActionDetail(sessionId, actionId), getCollections(sessionId)])
-      .then(([loadedAction, loadedCollections]) => {
+    Promise.all([getActionDetail(sessionId, actionId), getCollections(sessionId), getActions(sessionId)])
+      .then(([loadedAction, loadedCollections, loadedActions]) => {
         if (cancelled) return
         setAction(loadedAction)
         setCollections(loadedCollections)
+        setActions(loadedActions)
         setState({ status: 'ready' })
       })
       .catch((error: unknown) => {
@@ -83,6 +95,10 @@ export function ActionDetail() {
 
   const isSystem = SYSTEM_ACTION_IDS.has(action.action)
   const conditionLabel = formatCondition(action.condition)
+  const currentActionSummary = actions.find((a) => a.actionId === action.action)
+  const missingInEnvironments = currentActionSummary?.missingInEnvironments ?? []
+  const stepCountMismatches = currentActionSummary?.stepCountMismatches ?? []
+  const unusedVariables = currentActionSummary?.unusedVariables ?? []
 
   return (
     <div className="mx-auto max-w-3xl px-6 py-16">
@@ -103,6 +119,9 @@ export function ActionDetail() {
             action de sistema
           </span>
         )}
+        <EnvironmentFlag missingInEnvironments={missingInEnvironments} />
+        <StepCountMismatchFlag stepCount={action.steps.length} mismatches={stepCountMismatches} />
+        <UnusedVariablesFlag unusedVariables={unusedVariables} />
       </div>
 
       <dl className="mt-4 flex flex-wrap gap-x-6 gap-y-1 text-xs text-slate-500">
@@ -145,7 +164,7 @@ export function ActionDetail() {
 
       <ol className="mt-8 space-y-3">
         {action.steps.map((step, index) => (
-          <StepCard key={step.step} step={step} index={index} />
+          <StepCard key={step.step} step={step} index={index} unusedVariables={unusedVariables} />
         ))}
         {action.steps.length === 0 && <p className="text-sm text-slate-400">Esta action não tem steps.</p>}
       </ol>
@@ -560,10 +579,13 @@ function DeleteControl({
   )
 }
 
-function StepCard({ step, index }: { step: WatsonStep; index: number }) {
+function StepCard({ step, index, unusedVariables }: { step: WatsonStep; index: number; unusedVariables: string[] }) {
   const conditionLabel = formatCondition(step.condition)
   const outputText = extractOutputText(step.output)
   const invoke = step.resolver.invoke_action
+  const unusedByThisStep = [step.variable, invoke?.result_variable].filter(
+    (name): name is string => Boolean(name) && unusedVariables.includes(name!),
+  )
 
   return (
     <li className="rounded-lg border border-slate-200 bg-white p-4">
@@ -588,6 +610,12 @@ function StepCard({ step, index }: { step: WatsonStep; index: number }) {
       )}
 
       {outputText && <p className="mt-2 rounded-md bg-slate-50 p-2 text-xs italic text-slate-600">"{outputText}"</p>}
+
+      {unusedByThisStep.length > 0 && (
+        <p className="mt-2 text-xs text-purple-700">
+          ⚠ atribui <code className="rounded bg-purple-50 px-1">{unusedByThisStep.join(', ')}</code>, nunca lida depois
+        </p>
+      )}
 
       {isFreeTextQuestion(step.question) && (
         <p className="mt-2 text-xs text-slate-500">Aguarda resposta livre do usuário.</p>

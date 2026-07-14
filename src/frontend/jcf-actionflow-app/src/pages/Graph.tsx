@@ -6,7 +6,7 @@ import { ActionNode, StepNode, type ActionNodeData, type StepNodeData } from '..
 import { ApiError, getGraph } from '../lib/api'
 import { colorForGroup } from '../lib/graphColors'
 import { layoutGraph } from '../lib/layout'
-import type { FlowGraph } from '../lib/types'
+import type { EnvironmentStepCount, FlowGraph } from '../lib/types'
 
 type GraphLevel = 'actions' | 'steps'
 
@@ -47,6 +47,13 @@ export function GraphView() {
               isSystem: Boolean(node.data.isSystem),
               stepCount: Number(node.data.stepCount ?? 0),
               color,
+              missingInEnvironments: Array.isArray(node.data.missingInEnvironments)
+                ? (node.data.missingInEnvironments as string[])
+                : [],
+              stepCountMismatches: Array.isArray(node.data.stepCountMismatches)
+                ? (node.data.stepCountMismatches as EnvironmentStepCount[])
+                : [],
+              unusedVariables: Array.isArray(node.data.unusedVariables) ? (node.data.unusedVariables as string[]) : [],
             }
             return { id: node.id, type: 'action', position, data }
           }

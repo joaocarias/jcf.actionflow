@@ -25,10 +25,18 @@ export interface ImportResponse {
   issues: ValidationIssue[]
 }
 
+export interface EnvironmentStepCount {
+  env: string
+  stepCount: number
+}
+
 export interface CollectionActionSummary {
   actionId: string
   title: string | null
   stepCount: number
+  missingInEnvironments: string[]
+  stepCountMismatches: EnvironmentStepCount[]
+  unusedVariables: string[]
 }
 
 export interface CollectionSummary {
@@ -44,6 +52,9 @@ export interface ActionSummary {
   isOrphan: boolean
   collectionId: string | null
   stepCount: number
+  missingInEnvironments: string[]
+  stepCountMismatches: EnvironmentStepCount[]
+  unusedVariables: string[]
 }
 
 export interface GraphNode {

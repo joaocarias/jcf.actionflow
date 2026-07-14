@@ -60,6 +60,12 @@ public sealed class WorkspaceService(IWorkspaceRepository repository, ActionCopy
     {
         var workspace = GetSession(id).Export.Workspace;
         var actionsById = WorkspaceLookups.ActionsById(workspace);
+        var missingEnvByAction = EnvironmentActionAnalyzer.FindMissingEnvironments(workspace);
+        var stepMismatchByAction = EnvironmentActionAnalyzer.FindStepCountMismatches(workspace);
+        var unusedVariablesByAction = UnusedVariableAnalyzer.FindUnusedVariables(workspace);
+        IReadOnlyList<string> noMissingEnvironments = [];
+        IReadOnlyList<EnvironmentStepCount> noStepCountMismatches = [];
+        IReadOnlyList<string> noUnusedVariables = [];
 
         return workspace.Collections
             .Select(c => new CollectionSummary(
@@ -67,8 +73,14 @@ public sealed class WorkspaceService(IWorkspaceRepository repository, ActionCopy
                 c.Title,
                 c.ActionReferences
                     .Select(r => actionsById.TryGetValue(r.Action, out var action)
-                        ? new CollectionActionSummary(action.Action, action.Title, action.Steps.Count)
-                        : new CollectionActionSummary(r.Action, null, 0))
+                        ? new CollectionActionSummary(
+                            action.Action,
+                            action.Title,
+                            action.Steps.Count,
+                            missingEnvByAction.GetValueOrDefault(action.Action, noMissingEnvironments),
+                            stepMismatchByAction.GetValueOrDefault(action.Action, noStepCountMismatches),
+                            unusedVariablesByAction.GetValueOrDefault(action.Action, noUnusedVariables))
+                        : new CollectionActionSummary(r.Action, null, 0, noMissingEnvironments, noStepCountMismatches, noUnusedVariables))
                     .ToList()))
             .ToList();
     }
@@ -77,6 +89,12 @@ public sealed class WorkspaceService(IWorkspaceRepository repository, ActionCopy
     {
         var workspace = GetSession(id).Export.Workspace;
         var collectionByAction = WorkspaceLookups.CollectionIdByAction(workspace);
+        var missingEnvByAction = EnvironmentActionAnalyzer.FindMissingEnvironments(workspace);
+        var stepMismatchByAction = EnvironmentActionAnalyzer.FindStepCountMismatches(workspace);
+        var unusedVariablesByAction = UnusedVariableAnalyzer.FindUnusedVariables(workspace);
+        IReadOnlyList<string> noMissingEnvironments = [];
+        IReadOnlyList<EnvironmentStepCount> noStepCountMismatches = [];
+        IReadOnlyList<string> noUnusedVariables = [];
 
         return workspace.Actions
             .Select(a =>
@@ -89,7 +107,10 @@ public sealed class WorkspaceService(IWorkspaceRepository repository, ActionCopy
                     isSystem,
                     IsOrphan: !isSystem && collectionId is null,
                     collectionId,
-                    a.Steps.Count);
+                    a.Steps.Count,
+                    missingEnvByAction.GetValueOrDefault(a.Action, noMissingEnvironments),
+                    stepMismatchByAction.GetValueOrDefault(a.Action, noStepCountMismatches),
+                    unusedVariablesByAction.GetValueOrDefault(a.Action, noUnusedVariables));
             })
             .ToList();
     }
